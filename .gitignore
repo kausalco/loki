@@ -2,4 +2,6 @@
 .uptodate
 cmd/loki/loki
 pkg/zipkin-ui/bindata.go
+pkg/annotation/parse.go
 loki
+y.output

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -130,13 +131,26 @@ func Register(router *mux.Router, store storage.SpanStore) {
 			return
 		}
 
+		rawAnnotationQuery := values.Get("annotationQuery")
+		annotationsQuery := storage.NoopQuery()
+		if rawAnnotationQuery != "" {
+			// dumb parse for now...
+			parts := strings.SplitN(rawAnnotationQuery, "=", 2)
+			if len(parts) != 2 {
+				http.Error(w, "invalid annotationQuery", http.StatusBadRequest)
+				return
+			}
+			annotationsQuery = storage.StrEqQuery(parts[0], parts[1])
+		}
+
 		query := storage.Query{
-			EndMS:         endTS,
-			StartMS:       endTS - lookback,
-			Limit:         int(limit),
-			ServiceName:   serviceName,
-			SpanName:      values.Get("spanName"),
-			MinDurationUS: minDuration,
+			EndMS:           endTS,
+			StartMS:         endTS - lookback,
+			Limit:           int(limit),
+			ServiceName:     serviceName,
+			SpanName:        values.Get("spanName"),
+			MinDurationUS:   minDuration,
+			AnnotationQuery: annotationsQuery,
 		}
 		traces, err := store.Traces(query)
 		if err != nil {

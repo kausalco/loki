@@ -87,7 +87,15 @@ func (t *Trace) match(query Query) bool {
 		}
 	}
 
-	return true
+	found := false
+	for _, span := range t.Spans {
+		if query.AnnotationQuery.Match(span.GetBinaryAnnotations()) {
+			found = true
+			break
+		}
+	}
+
+	return found
 }
 
 type byMinTimestamp []Trace

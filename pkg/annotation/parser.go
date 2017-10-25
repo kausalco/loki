@@ -28,6 +28,13 @@ type lexer struct {
 	error  string
 }
 
+var tokens = map[string]int{
+	",": COMMA,
+	".": DOT,
+	"{": OPEN_BRACE,
+	"}": CLOSE_BRACE,
+}
+
 func (l *lexer) Lex(lval *yySymType) int {
 	r := l.Scan()
 	switch r {
@@ -57,12 +64,10 @@ func (l *lexer) Lex(lval *yySymType) int {
 			l.Scan()
 			return NRE
 		}
-	case ",":
-		return COMMA
-	case "{":
-		return OPEN_BRACE
-	case "}":
-		return CLOSE_BRACE
+	}
+
+	if token, ok := tokens[l.TokenText()]; ok {
+		return token
 	}
 
 	lval.str = l.TokenText()

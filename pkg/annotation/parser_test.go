@@ -49,6 +49,7 @@ func TestParse(t *testing.T) {
 		expected Matchers
 	}{
 		{`{foo="bar"}`, Matchers{eq{"foo", "bar"}}},
+		{`{http.url=~"^/admin"}`, Matchers{re{"http.url", regexp.MustCompile("^/admin")}}},
 		{`{ foo = "bar" }`, Matchers{eq{"foo", "bar"}}},
 		{`{ foo != "bar" }`, Matchers{ne{"foo", "bar"}}},
 		{`{ foo =~ "bar" }`, Matchers{re{"foo", regexp.MustCompile("bar")}}},

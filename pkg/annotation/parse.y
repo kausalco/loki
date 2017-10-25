@@ -3,10 +3,11 @@ package annotation
 %}
 
 %union{
-  Expr     Matchers
-  Matchers Matchers
-  Matcher  Matcher
-  str      string
+  Expr       Matchers
+  Matchers   Matchers
+  Matcher    Matcher
+  str        string
+  Identifier string
 }
 
 %start expr
@@ -14,9 +15,10 @@ package annotation
 %type  <Expr>        expr
 %type  <Matchers>    matchers
 %type  <Matcher>     matcher
+%type  <Identifier>  identifier
 
 %token <str>  IDENTIFIER STRING
-%token <val>  EQ NEQ RE NRE OPEN_BRACE CLOSE_BRACE COMMA
+%token <val>  EQ NEQ RE NRE OPEN_BRACE CLOSE_BRACE COMMA DOT
 
 %%
 
@@ -28,10 +30,15 @@ matchers:
     ;
 
 matcher:
-      IDENTIFIER EQ STRING     { $$ = Eq($1, $3) }
-    | IDENTIFIER NEQ STRING    { $$ = Ne($1, $3) }
-    | IDENTIFIER RE STRING     { $$ = Re($1, $3) }
-    | IDENTIFIER NRE STRING    { $$ = Nre($1, $3) }
+      identifier EQ STRING     { $$ = Eq($1, $3) }
+    | identifier NEQ STRING    { $$ = Ne($1, $3) }
+    | identifier RE STRING     { $$ = Re($1, $3) }
+    | identifier NRE STRING    { $$ = Nre($1, $3) }
+    ;
+
+identifier:
+      IDENTIFIER                { $$ = $1 }
+    | identifier DOT IDENTIFIER { $$ = $1 + "." + $3 }
     ;
 
 %%

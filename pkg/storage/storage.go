@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/openzipkin/zipkin-go-opentracing/thrift/gen-go/zipkincore"
+	"github.com/weaveworks-experiments/loki/pkg/annotation"
 )
 
 type SpanStore interface {
@@ -17,11 +18,12 @@ type ReadStore interface {
 }
 
 type Query struct {
-	ServiceName   string
-	SpanName      string
-	MinDurationUS int64
-	MaxDurationUS int64
-	EndMS         int64
-	StartMS       int64
-	Limit         int
+	ServiceName     string
+	SpanName        string
+	MinDurationUS   int64
+	MaxDurationUS   int64
+	EndMS           int64
+	StartMS         int64
+	Limit           int
+	AnnotationQuery annotation.Matcher
 }

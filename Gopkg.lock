@@ -444,6 +444,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert","require"]
+  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
+  version = "v1.1.4"
+
+[[projects]]
   branch = "master"
   name = "github.com/syndtr/goleveldb"
   packages = ["leveldb","leveldb/cache","leveldb/comparer","leveldb/errors","leveldb/filter","leveldb/iterator","leveldb/journal","leveldb/memdb","leveldb/opt","leveldb/storage","leveldb/table","leveldb/util"]
@@ -571,7 +577,7 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9fda4c2be5ad5cd9511381461afb05f7f658f4a82929da830a85d1d72352f1a8"
+  inputs-digest = "fbbe4d3b774f8b3614a269123ec94c3172c826b640d76339eb67f6284fd51c52"
   prune = false
   solver-name = "gps-cdcl"
   solver-version = 1

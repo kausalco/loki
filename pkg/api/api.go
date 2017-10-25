@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/weaveworks-experiments/loki/pkg/annotation"
 	"github.com/weaveworks-experiments/loki/pkg/storage"
 )
 
@@ -130,13 +132,24 @@ func Register(router *mux.Router, store storage.SpanStore) {
 			return
 		}
 
+		rawAnnotationMatcher := values.Get("annotationQuery")
+		annotationsMatcher := annotation.NoopMatcher
+		if rawAnnotationMatcher != "" {
+			annotationsMatcher, err = annotation.Parse(rawAnnotationMatcher)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("invalid annotation matcher: %v", err), http.StatusBadRequest)
+				return
+			}
+		}
+
 		query := storage.Query{
-			EndMS:         endTS,
-			StartMS:       endTS - lookback,
-			Limit:         int(limit),
-			ServiceName:   serviceName,
-			SpanName:      values.Get("spanName"),
-			MinDurationUS: minDuration,
+			EndMS:           endTS,
+			StartMS:         endTS - lookback,
+			Limit:           int(limit),
+			ServiceName:     serviceName,
+			SpanName:        values.Get("spanName"),
+			MinDurationUS:   minDuration,
+			AnnotationQuery: annotationsMatcher,
 		}
 		traces, err := store.Traces(query)
 		if err != nil {

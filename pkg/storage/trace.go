@@ -87,6 +87,7 @@ func (t *Trace) match(query Query) bool {
 		}
 	}
 
+	// Must have at least one span which matches the annotation query.
 	found := false
 	for _, span := range t.Spans {
 		if query.AnnotationQuery.Match(span.GetBinaryAnnotations()) {

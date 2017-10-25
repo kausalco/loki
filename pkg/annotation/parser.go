@@ -10,14 +10,14 @@ import (
 func Parse(input string) (Matchers, error) {
 	l := lexer{
 		Scanner: scanner.Scanner{
-			Mode: scanner.SkipComments | scanner.ScanStrings,
+			Mode: scanner.SkipComments | scanner.ScanStrings | scanner.ScanInts,
 		},
 	}
 	l.Init(strings.NewReader(input))
 	parser := yyNewParser()
 	e := parser.Parse(&l)
 	if e != 0 {
-		return nil, fmt.Errorf(l.error)
+		return nil, l.err
 	}
 	return l.output, nil
 }
@@ -25,7 +25,7 @@ func Parse(input string) (Matchers, error) {
 type lexer struct {
 	scanner.Scanner
 	output Matchers
-	error  string
+	err    error
 }
 
 var tokens = map[string]int{
@@ -37,14 +37,24 @@ var tokens = map[string]int{
 
 func (l *lexer) Lex(lval *yySymType) int {
 	r := l.Scan()
+	var err error
 	switch r {
 	case scanner.EOF:
 		return 0
+
+	case scanner.Int:
+		lval.int, err = strconv.ParseInt(l.TokenText(), 10, 64)
+		if err != nil {
+			l.err = err
+			return 0
+		}
+		return INT
+
 	case scanner.String:
-		var err error
 		lval.str, err = strconv.Unquote(l.TokenText())
 		if err != nil {
-			panic(err)
+			l.err = err
+			return 0
 		}
 		return STRING
 	}
@@ -75,5 +85,5 @@ func (l *lexer) Lex(lval *yySymType) int {
 }
 
 func (l *lexer) Error(s string) {
-	l.error = s
+	l.err = fmt.Errorf(s)
 }

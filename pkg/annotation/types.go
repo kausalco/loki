@@ -1,6 +1,7 @@
 package annotation
 
 import (
+	"encoding/binary"
 	"regexp"
 
 	"github.com/openzipkin/zipkin-go-opentracing/thrift/gen-go/zipkincore"
@@ -29,19 +30,94 @@ func (noopMatcher) Match(_ []*zipkincore.BinaryAnnotation) bool {
 
 var NoopMatcher Matcher = noopMatcher{}
 
-type eq struct {
+type eqStr struct {
 	key, value string
 }
 
-func Eq(key, value string) Matcher {
-	return eq{key, value}
+func EqStr(key, value string) Matcher {
+	return eqStr{key, value}
 }
 
-func (m eq) Match(as []*zipkincore.BinaryAnnotation) bool {
+func (m eqStr) Match(as []*zipkincore.BinaryAnnotation) bool {
 	for _, a := range as {
 		if a.GetKey() == m.key &&
 			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
 			string(a.GetValue()) == m.value {
+			return true
+		}
+	}
+	return false
+}
+
+type neStr struct {
+	key, value string
+}
+
+func NeStr(key, value string) Matcher {
+	return neStr{key, value}
+}
+
+func (m neStr) Match(as []*zipkincore.BinaryAnnotation) bool {
+	for _, a := range as {
+		if a.GetKey() == m.key &&
+			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
+			string(a.GetValue()) != m.value {
+			return true
+		}
+	}
+	return false
+}
+
+func intVal(a *zipkincore.BinaryAnnotation) int64 {
+	switch a.GetAnnotationType() {
+	case zipkincore.AnnotationType_I16:
+		return int64(binary.BigEndian.Uint16(a.Value))
+	case zipkincore.AnnotationType_I32:
+		return int64(binary.BigEndian.Uint32(a.Value))
+	case zipkincore.AnnotationType_I64:
+		return int64(binary.BigEndian.Uint64(a.Value))
+	}
+	return 0
+}
+
+func isInt(a *zipkincore.BinaryAnnotation) bool {
+	switch a.GetAnnotationType() {
+	case zipkincore.AnnotationType_I16, zipkincore.AnnotationType_I32, zipkincore.AnnotationType_I64:
+		return true
+	}
+	return false
+}
+
+type eqInt struct {
+	key   string
+	value int64
+}
+
+func EqInt(key string, value int64) Matcher {
+	return eqInt{key, value}
+}
+
+func (m eqInt) Match(as []*zipkincore.BinaryAnnotation) bool {
+	for _, a := range as {
+		if a.GetKey() == m.key && isInt(a) && intVal(a) == m.value {
+			return true
+		}
+	}
+	return false
+}
+
+type neInt struct {
+	key   string
+	value int64
+}
+
+func NeInt(key string, value int64) Matcher {
+	return neInt{key, value}
+}
+
+func (m neInt) Match(as []*zipkincore.BinaryAnnotation) bool {
+	for _, a := range as {
+		if a.GetKey() == m.key && isInt(a) && intVal(a) != m.value {
 			return true
 		}
 	}
@@ -72,25 +148,6 @@ func (m re) Match(as []*zipkincore.BinaryAnnotation) bool {
 	return false
 }
 
-type ne struct {
-	key, value string
-}
-
-func Ne(key, value string) Matcher {
-	return ne{key, value}
-}
-
-func (m ne) Match(as []*zipkincore.BinaryAnnotation) bool {
-	for _, a := range as {
-		if a.GetKey() == m.key &&
-			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
-			string(a.GetValue()) == m.value {
-			return false
-		}
-	}
-	return true
-}
-
 type nre struct {
 	key string
 	re  *regexp.Regexp
@@ -108,9 +165,9 @@ func (m nre) Match(as []*zipkincore.BinaryAnnotation) bool {
 	for _, a := range as {
 		if a.GetKey() == m.key &&
 			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
-			m.re.Match(a.GetValue()) {
-			return false
+			!m.re.Match(a.GetValue()) {
+			return true
 		}
 	}
-	return true
+	return false
 }

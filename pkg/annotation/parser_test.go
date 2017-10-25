@@ -48,13 +48,14 @@ func TestParse(t *testing.T) {
 		input    string
 		expected Matchers
 	}{
-		{`{foo="bar"}`, Matchers{eq{"foo", "bar"}}},
+		{`{foo="bar"}`, Matchers{eqStr{"foo", "bar"}}},
 		{`{http.url=~"^/admin"}`, Matchers{re{"http.url", regexp.MustCompile("^/admin")}}},
-		{`{ foo = "bar" }`, Matchers{eq{"foo", "bar"}}},
-		{`{ foo != "bar" }`, Matchers{ne{"foo", "bar"}}},
+		{`{ foo = "bar" }`, Matchers{eqStr{"foo", "bar"}}},
+		{`{ foo != "bar" }`, Matchers{neStr{"foo", "bar"}}},
 		{`{ foo =~ "bar" }`, Matchers{re{"foo", regexp.MustCompile("bar")}}},
 		{`{ foo !~ "bar" }`, Matchers{nre{"foo", regexp.MustCompile("bar")}}},
-		{`{ foo = "bar", bar != "baz" }`, Matchers{eq{"foo", "bar"}, ne{"bar", "baz"}}},
+		{`{ foo = "bar", bar != "baz" }`, Matchers{eqStr{"foo", "bar"}, neStr{"bar", "baz"}}},
+		{`{http.url=~"^/admin", http.status_code!="200"}`, Matchers{re{"http.url", regexp.MustCompile("^/admin")}, neStr{"http.status_code", "200"}}},
 	} {
 		t.Run(tc.input, func(t *testing.T) {
 			output, err := Parse(tc.input)

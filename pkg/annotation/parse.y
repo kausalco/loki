@@ -7,6 +7,7 @@ package annotation
   Matchers   Matchers
   Matcher    Matcher
   str        string
+  int        int64
   Identifier string
 }
 
@@ -18,6 +19,7 @@ package annotation
 %type  <Identifier>  identifier
 
 %token <str>  IDENTIFIER STRING
+%token <int>  INT
 %token <val>  EQ NEQ RE NRE OPEN_BRACE CLOSE_BRACE COMMA DOT
 
 %%
@@ -30,10 +32,12 @@ matchers:
     ;
 
 matcher:
-      identifier EQ STRING     { $$ = Eq($1, $3) }
-    | identifier NEQ STRING    { $$ = Ne($1, $3) }
+      identifier EQ STRING     { $$ = EqStr($1, $3) }
+    | identifier NEQ STRING    { $$ = NeStr($1, $3) }
     | identifier RE STRING     { $$ = Re($1, $3) }
     | identifier NRE STRING    { $$ = Nre($1, $3) }
+    | identifier EQ INT        { $$ = EqInt($1, $3) }
+    | identifier NEQ INT       { $$ = NeInt($1, $3) }
     ;
 
 identifier:

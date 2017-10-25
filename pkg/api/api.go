@@ -2,15 +2,16 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/weaveworks-experiments/loki/pkg/annotation"
 	"github.com/weaveworks-experiments/loki/pkg/storage"
 )
 
@@ -131,16 +132,14 @@ func Register(router *mux.Router, store storage.SpanStore) {
 			return
 		}
 
-		rawAnnotationQuery := values.Get("annotationQuery")
-		annotationsQuery := storage.NoopQuery()
-		if rawAnnotationQuery != "" {
-			// dumb parse for now...
-			parts := strings.SplitN(rawAnnotationQuery, "=", 2)
-			if len(parts) != 2 {
-				http.Error(w, "invalid annotationQuery", http.StatusBadRequest)
+		rawAnnotationMatcher := values.Get("annotationQuery")
+		annotationsMatcher := annotation.NoopMatcher
+		if rawAnnotationMatcher != "" {
+			annotationsMatcher, err = annotation.Parse(rawAnnotationMatcher)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("invalid annotation matcher: %v", err), http.StatusBadRequest)
 				return
 			}
-			annotationsQuery = storage.StrEqQuery(parts[0], parts[1])
 		}
 
 		query := storage.Query{
@@ -150,7 +149,7 @@ func Register(router *mux.Router, store storage.SpanStore) {
 			ServiceName:     serviceName,
 			SpanName:        values.Get("spanName"),
 			MinDurationUS:   minDuration,
-			AnnotationQuery: annotationsQuery,
+			AnnotationQuery: annotationsMatcher,
 		}
 		traces, err := store.Traces(query)
 		if err != nil {

@@ -7,19 +7,27 @@ import (
 )
 
 type Matcher interface {
-	match([]*zipkincore.BinaryAnnotation) bool
+	Match([]*zipkincore.BinaryAnnotation) bool
 }
 
 type Matchers []Matcher
 
-func (ms Matchers) match(bas []*zipkincore.BinaryAnnotation) bool {
+func (ms Matchers) Match(bas []*zipkincore.BinaryAnnotation) bool {
 	for _, m := range ms {
-		if !m.match(bas) {
+		if !m.Match(bas) {
 			return false
 		}
 	}
 	return true
 }
+
+type noopMatcher struct{}
+
+func (noopMatcher) Match(_ []*zipkincore.BinaryAnnotation) bool {
+	return true
+}
+
+var NoopMatcher Matcher = noopMatcher{}
 
 type eq struct {
 	key, value string
@@ -29,7 +37,7 @@ func Eq(key, value string) Matcher {
 	return eq{key, value}
 }
 
-func (m eq) match(as []*zipkincore.BinaryAnnotation) bool {
+func (m eq) Match(as []*zipkincore.BinaryAnnotation) bool {
 	for _, a := range as {
 		if a.GetKey() == m.key &&
 			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
@@ -53,7 +61,7 @@ func Re(key, expr string) Matcher {
 	return re{key, r}
 }
 
-func (m re) match(as []*zipkincore.BinaryAnnotation) bool {
+func (m re) Match(as []*zipkincore.BinaryAnnotation) bool {
 	for _, a := range as {
 		if a.GetKey() == m.key &&
 			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
@@ -72,7 +80,7 @@ func Ne(key, value string) Matcher {
 	return ne{key, value}
 }
 
-func (m ne) match(as []*zipkincore.BinaryAnnotation) bool {
+func (m ne) Match(as []*zipkincore.BinaryAnnotation) bool {
 	for _, a := range as {
 		if a.GetKey() == m.key &&
 			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
@@ -96,7 +104,7 @@ func Nre(key, expr string) Matcher {
 	return nre{key, r}
 }
 
-func (m nre) match(as []*zipkincore.BinaryAnnotation) bool {
+func (m nre) Match(as []*zipkincore.BinaryAnnotation) bool {
 	for _, a := range as {
 		if a.GetKey() == m.key &&
 			a.GetAnnotationType() == zipkincore.AnnotationType_STRING &&
